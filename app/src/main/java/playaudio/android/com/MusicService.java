@@ -4,11 +4,13 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +34,11 @@ public class MusicService extends IntentService implements MusicController {
     private IBinder mBinder = new ServiceBinder();
     private List<RadioResponse.DataBean.ItemsBean> mRadioList;
     private RadioResponse.DataBean.ItemsBean mCurrentMusic;
+    private MediaPlayer mMediaPlayer;
+    // 已经初始化资源
+    private boolean mIsInitialized;
+    // 正在加载音频流文件
+    private boolean mIsLoading;
 
     public static void bindService(Context context, ServiceConnection serviceConnection) {
         Intent intent = new Intent(context, MusicService.class);
@@ -100,24 +107,90 @@ public class MusicService extends IntentService implements MusicController {
     @Override
     public void playOrPause() {
         Log.d(TAG, "playOrPause");
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+            if (sMusicCallback != null) {
+                sMusicCallback.onPause(mCurrentMusic);
+            }
+        } else {
+            if (!mIsInitialized) {
+                prepareMusic();
+            } else {
+                if (mIsLoading) {
+                    return;
+                }
+                mMediaPlayer.start();
+                if (sMusicCallback != null) {
+                    sMusicCallback.onPlay(mCurrentMusic);
+                }
+            }
+        }
     }
 
     @Override
     public void switchPrevious() {
         Log.d(TAG, "switchPrevious");
+        if (mRadioList.size() > 0) {
+            int currentPosition = mRadioList.indexOf(mCurrentMusic);
+            if (currentPosition == 0) {
+                return;
+            }
+            mCurrentMusic = mRadioList.get(--currentPosition);
+            prepareMusic();
+        }
     }
 
     @Override
     public void switchNext() {
         Log.d(TAG, "switchNext");
+        if (mRadioList.size() > 0) {
+            int currentPosition = mRadioList.indexOf(mCurrentMusic);
+            if (currentPosition == mRadioList.size() - 1) {
+                return;
+            }
+            mCurrentMusic = mRadioList.get(++currentPosition);
+            prepareMusic();
+        }
     }
 
     private void initPlayer() {
         Log.d(TAG, "initPlayer");
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
+                mIsLoading = false;
+                if (sMusicCallback != null) {
+                    sMusicCallback.onPlay(mCurrentMusic);
+                }
+            }
+        });
+        mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                Log.d(TAG, "onError: " + what);
+                return false;
+            }
+        });
+    }
+
+    private void prepareMusic() {
+        try {
+            mMediaPlayer.reset();
+            mMediaPlayer.setDataSource(mCurrentMusic.getStreams().get(0).getUrl());
+            mMediaPlayer.prepareAsync();
+            mIsInitialized = true;
+            if (sMusicCallback != null) {
+                sMusicCallback.onLoading(mCurrentMusic);
+            }
+            mIsLoading = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getRadioList() {
-        Log.d(TAG,"getRadioList");
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("packageName", getPackageName());
         queryParams.put("language", Locale.getDefault().getLanguage());
@@ -132,9 +205,8 @@ public class MusicService extends IntentService implements MusicController {
                     mRadioList.addAll(radioList);
                     if (mRadioList.size() > 0) {
                         mCurrentMusic = mRadioList.get(0);
-                        Log.d(TAG,"onResponse");
                         if (sMusicCallback != null) {
-                            sMusicCallback.onLoading(mCurrentMusic);
+                            sMusicCallback.onFinishLoadingMusicList(mCurrentMusic);
                         }
                     }
                 }

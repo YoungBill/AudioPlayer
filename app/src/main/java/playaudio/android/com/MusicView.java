@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,26 +21,41 @@ import playaudio.android.com.bean.RadioResponse;
 public class MusicView extends LinearLayout implements View.OnClickListener {
 
     private TextView mTitleTv;
-    private ImageButton mPlayOrPauseSwitch;
+    private PlayOrPauseSwitch mPlayOrPauseSwitch;
     private ImageButton mPreviewSwitch;
     private ImageButton mNextSwitch;
     private MusicService mMusicService;
     private MusicCallback mMusicCallback = new MusicCallback() {
+
+        @Override
+        public void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean) {
+            mTitleTv.setText(firstMusicBean.getTitle());
+            mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
+            mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_play);
+        }
+
         @Override
         public void onLoading(RadioResponse.DataBean.ItemsBean musicBean) {
             mTitleTv.setText(musicBean.getTitle());
-            mPlayOrPauseSwitch.setBackground(ContextCompat.getDrawable(getContext(), R.mipmap.play_status_playing));
-            mPlayOrPauseSwitch.setImageResource(R.mipmap.play_btn_play);
+            mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_loading);
+            mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_loading);
+            mPlayOrPauseSwitch.setShowLoading(true);
         }
 
         @Override
         public void onPlay(RadioResponse.DataBean.ItemsBean musicBean) {
-
+            mTitleTv.setText(musicBean.getTitle());
+            mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
+            mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_pause);
+            mPlayOrPauseSwitch.setShowLoading(false);
         }
 
         @Override
         public void onPause(RadioResponse.DataBean.ItemsBean musicBean) {
-
+            mTitleTv.setText(musicBean.getTitle());
+            mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
+            mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_play);
+            mPlayOrPauseSwitch.setShowLoading(false);
         }
 
         @Override
@@ -102,7 +116,6 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
             case R.id.next_switch:
                 mMusicService.switchNext();
                 break;
-
         }
     }
 }

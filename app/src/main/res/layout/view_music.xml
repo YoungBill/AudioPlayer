@@ -18,6 +18,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:layout_marginHorizontal="12dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:singleLine="true"
             android:text="Sunrise Radio Yorkshire"
             android:textColor="@android:color/white"
             android:textSize="11sp" />
@@ -36,13 +41,11 @@
         android:layout_weight="3"
         android:background="@drawable/top_radio_operation_panel_bg">
 
-        <ImageButton
+        <playaudio.android.com.PlayOrPauseSwitch
             android:id="@+id/play_or_pause_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@mipmap/play_status_loading"
-            android:src="@mipmap/play_btn_loading" />
+            android:layout_centerInParent="true" />
 
         <ImageButton
             android:id="@+id/preview_switch"

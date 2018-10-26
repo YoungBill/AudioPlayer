@@ -9,6 +9,8 @@ import playaudio.android.com.bean.RadioResponse;
 
 public interface MusicCallback {
 
+    void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean);
+
     void onLoading(RadioResponse.DataBean.ItemsBean musicBean);
 
     void onPlay(RadioResponse.DataBean.ItemsBean musicBean);
