@@ -133,9 +133,11 @@ public class MusicService extends IntentService implements MusicController {
         if (mRadioList.size() > 0) {
             int currentPosition = mRadioList.indexOf(mCurrentMusic);
             if (currentPosition == 0) {
-                return;
+                currentPosition = mRadioList.size() - 1;
+            } else {
+                currentPosition--;
             }
-            mCurrentMusic = mRadioList.get(--currentPosition);
+            mCurrentMusic = mRadioList.get(currentPosition);
             prepareMusic();
         }
     }
@@ -146,9 +148,11 @@ public class MusicService extends IntentService implements MusicController {
         if (mRadioList.size() > 0) {
             int currentPosition = mRadioList.indexOf(mCurrentMusic);
             if (currentPosition == mRadioList.size() - 1) {
-                return;
+                currentPosition = 0;
+            } else {
+                currentPosition++;
             }
-            mCurrentMusic = mRadioList.get(++currentPosition);
+            mCurrentMusic = mRadioList.get(currentPosition);
             prepareMusic();
         }
     }
