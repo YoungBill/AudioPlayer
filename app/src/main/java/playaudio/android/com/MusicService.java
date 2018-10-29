@@ -102,6 +102,10 @@ public class MusicService extends IntentService implements MusicController {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+        }
+        mMediaPlayer.release();
     }
 
     @Override
