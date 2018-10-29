@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">PlayAudio</string>
+
+    <string name="audio_title">&#160;&#160;&#160;&#160;%1s&#160;&#160;&#160;&#160;</string>
 </resources>

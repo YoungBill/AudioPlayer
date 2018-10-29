@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import playaudio.android.com.bean.RadioResponse;
 
@@ -20,7 +19,8 @@ import playaudio.android.com.bean.RadioResponse;
 
 public class MusicView extends LinearLayout implements View.OnClickListener {
 
-    private TextView mTitleTv;
+    private MarqueeTextView mFrequencyTv;
+    private MarqueeTextView mTitleTv;
     private PlayOrPauseSwitch mPlayOrPauseSwitch;
     private ImageButton mPreviewSwitch;
     private ImageButton mNextSwitch;
@@ -29,14 +29,19 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
 
         @Override
         public void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean) {
-            mTitleTv.setText(firstMusicBean.getTitle());
+            mFrequencyTv.setText(firstMusicBean.getFrequency());
+            String title = getContext().getString(R.string.audio_title, firstMusicBean.getTitle());
+            mTitleTv.setText(title);
             mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
             mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_play);
         }
 
         @Override
         public void onLoading(RadioResponse.DataBean.ItemsBean musicBean) {
-            mTitleTv.setText(musicBean.getTitle());
+            mFrequencyTv.setText(musicBean.getFrequency());
+            String title = getContext().getString(R.string.audio_title, musicBean.getTitle());
+            mTitleTv.setText(title);
+            mTitleTv.stopScroll();
             mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_loading);
             mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_loading);
             mPlayOrPauseSwitch.setShowLoading(true);
@@ -44,7 +49,7 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
 
         @Override
         public void onPlay(RadioResponse.DataBean.ItemsBean musicBean) {
-            mTitleTv.setText(musicBean.getTitle());
+            mTitleTv.resumeScroll();
             mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
             mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_pause);
             mPlayOrPauseSwitch.setShowLoading(false);
@@ -52,7 +57,7 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
 
         @Override
         public void onPause(RadioResponse.DataBean.ItemsBean musicBean) {
-            mTitleTv.setText(musicBean.getTitle());
+            mTitleTv.pauseScroll();
             mPlayOrPauseSwitch.setOuterImageResource(R.mipmap.play_status_playing);
             mPlayOrPauseSwitch.setInnerImageResource(R.mipmap.play_btn_play);
             mPlayOrPauseSwitch.setShowLoading(false);
@@ -79,6 +84,7 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
     public MusicView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.view_music, this);
+        mFrequencyTv = findViewById(R.id.frequencyTv);
         mTitleTv = findViewById(R.id.titleTv);
         mPlayOrPauseSwitch = findViewById(R.id.play_or_pause_switch);
         mPlayOrPauseSwitch.setOnClickListener(this);

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/default_wallpaper_bg"
     android:orientation="vertical"
     android:padding="5dp">
 
@@ -13,19 +14,40 @@
         android:layout_weight="4"
         android:background="@drawable/top_radio_title_bg">
 
-        <TextView
-            android:id="@+id/titleTv"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:layout_marginHorizontal="12dp"
-            android:ellipsize="marquee"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:singleLine="true"
-            android:text="Sunrise Radio Yorkshire"
-            android:textColor="@android:color/white"
-            android:textSize="11sp" />
+            android:orientation="vertical">
+
+            <playaudio.android.com.MarqueeTextView
+                android:id="@+id/frequencyTv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:singleLine="true"
+                android:text="98.3 FM"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                app:scroll_first_delay="0"
+                app:scroll_interval="2000"
+                app:scroll_mode="mode_forever" />
+
+            <playaudio.android.com.MarqueeTextView
+                android:id="@+id/titleTv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="2dp"
+                android:singleLine="true"
+                android:text="Radio Mirchi 98.3 FM"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                app:scroll_first_delay="0"
+                app:scroll_interval="2000"
+                app:scroll_mode="mode_forever" />
+        </LinearLayout>
 
         <ImageView
             android:layout_width="wrap_content"
