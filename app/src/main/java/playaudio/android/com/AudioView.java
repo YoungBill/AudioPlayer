@@ -17,18 +17,18 @@ import playaudio.android.com.bean.RadioResponse;
  * Created by taochen on 18-10-25.
  */
 
-public class MusicView extends LinearLayout implements View.OnClickListener {
+public class AudioView extends LinearLayout implements View.OnClickListener {
 
     private MarqueeTextView mFrequencyTv;
     private MarqueeTextView mTitleTv;
     private PlayOrPauseSwitch mPlayOrPauseSwitch;
     private ImageButton mPreviewSwitch;
     private ImageButton mNextSwitch;
-    private MusicService mMusicService;
-    private MusicCallback mMusicCallback;
+    private AudioService mMusicService;
+    private AudioCallback mMusicCallback;
     private ServiceConnection mServiceConnection;
 
-    public MusicView(Context context, @Nullable AttributeSet attrs) {
+    public AudioView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
@@ -36,17 +36,17 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        MusicService.registerMusicCallback(mMusicCallback);
-        MusicService.bindService(getContext(), mServiceConnection);
-        MusicService.startService(getContext());
+        AudioService.registerMusicCallback(mMusicCallback);
+        AudioService.bindService(getContext(), mServiceConnection);
+        AudioService.startService(getContext());
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        MusicService.unRegisterMusicCallback();
-        MusicService.unBindService(getContext(), mServiceConnection);
-        MusicService.stopService(getContext());
+        AudioService.unRegisterMusicCallback(mMusicCallback);
+        AudioService.unBindService(getContext(), mServiceConnection);
+        AudioService.stopService(getContext());
     }
 
     @Override
@@ -74,7 +74,7 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
         mPreviewSwitch.setOnClickListener(this);
         mNextSwitch = findViewById(R.id.next_switch);
         mNextSwitch.setOnClickListener(this);
-        mMusicCallback = new MusicCallback() {
+        mMusicCallback = new AudioCallback() {
 
             @Override
             public void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean) {
@@ -120,8 +120,7 @@ public class MusicView extends LinearLayout implements View.OnClickListener {
         mServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-                mMusicService = ((MusicService.ServiceBinder) iBinder).getService();
-
+                mMusicService = ((AudioService.ServiceBinder) iBinder).getService();
             }
 
             @Override

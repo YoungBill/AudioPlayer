@@ -26,10 +26,10 @@ import retrofit2.Call;
  * Created by taochen on 18-10-25.
  */
 
-public class MusicService extends IntentService implements MusicController {
+public class AudioService extends IntentService implements AudioController {
 
-    private static final String TAG = MusicService.class.getSimpleName();
-    private static MusicCallback sMusicCallback;
+    private static final String TAG = AudioService.class.getSimpleName();
+    private static List<AudioCallback> sMusicCallbackList;
 
     private IBinder mBinder = new ServiceBinder();
     private List<RadioResponse.DataBean.ItemsBean> mRadioList;
@@ -41,7 +41,7 @@ public class MusicService extends IntentService implements MusicController {
     private boolean mIsLoading;
 
     public static void bindService(Context context, ServiceConnection serviceConnection) {
-        Intent intent = new Intent(context, MusicService.class);
+        Intent intent = new Intent(context, AudioService.class);
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -50,16 +50,16 @@ public class MusicService extends IntentService implements MusicController {
     }
 
     public static void startService(Context context) {
-        Intent intent = new Intent(context, MusicService.class);
+        Intent intent = new Intent(context, AudioService.class);
         context.startService(intent);
     }
 
     public static void stopService(Context context) {
-        Intent intent = new Intent(context, MusicService.class);
+        Intent intent = new Intent(context, AudioService.class);
         context.stopService(intent);
     }
 
-    public MusicService() {
+    public AudioService() {
         super("playaudio.android.com.MusicService");
     }
 
@@ -68,7 +68,7 @@ public class MusicService extends IntentService implements MusicController {
      *
      * @param name Used to name the worker thread, important only for debugging.
      */
-    public MusicService(String name) {
+    public AudioService(String name) {
         super(name);
     }
 
@@ -113,8 +113,8 @@ public class MusicService extends IntentService implements MusicController {
         Log.d(TAG, "playOrPause");
         if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            if (sMusicCallback != null) {
-                sMusicCallback.onPause(mCurrentMusic);
+            for (AudioCallback callback : sMusicCallbackList) {
+                callback.onPause(mCurrentMusic);
             }
         } else {
             if (!mIsInitialized) {
@@ -124,8 +124,8 @@ public class MusicService extends IntentService implements MusicController {
                     return;
                 }
                 mMediaPlayer.start();
-                if (sMusicCallback != null) {
-                    sMusicCallback.onPlay(mCurrentMusic);
+                for (AudioCallback callback : sMusicCallbackList) {
+                    callback.onPlay(mCurrentMusic);
                 }
             }
         }
@@ -169,8 +169,8 @@ public class MusicService extends IntentService implements MusicController {
             public void onPrepared(MediaPlayer mediaPlayer) {
                 mediaPlayer.start();
                 mIsLoading = false;
-                if (sMusicCallback != null) {
-                    sMusicCallback.onPlay(mCurrentMusic);
+                for (AudioCallback callback : sMusicCallbackList) {
+                    callback.onPlay(mCurrentMusic);
                 }
             }
         });
@@ -189,8 +189,8 @@ public class MusicService extends IntentService implements MusicController {
             mMediaPlayer.setDataSource(mCurrentMusic.getStreams().get(0).getUrl());
             mMediaPlayer.prepareAsync();
             mIsInitialized = true;
-            if (sMusicCallback != null) {
-                sMusicCallback.onLoading(mCurrentMusic);
+            for (AudioCallback callback : sMusicCallbackList) {
+                callback.onLoading(mCurrentMusic);
             }
             mIsLoading = true;
         } catch (IOException e) {
@@ -213,8 +213,8 @@ public class MusicService extends IntentService implements MusicController {
                     mRadioList.addAll(radioList);
                     if (mRadioList.size() > 0) {
                         mCurrentMusic = mRadioList.get(0);
-                        if (sMusicCallback != null) {
-                            sMusicCallback.onFinishLoadingMusicList(mCurrentMusic);
+                        for (AudioCallback callback : sMusicCallbackList) {
+                            callback.onFinishLoadingMusicList(mCurrentMusic);
                         }
                     }
                 }
@@ -227,17 +227,20 @@ public class MusicService extends IntentService implements MusicController {
         });
     }
 
-    public static void registerMusicCallback(MusicCallback callback) {
-        sMusicCallback = callback;
+    public static void registerMusicCallback(AudioCallback callback) {
+        if (sMusicCallbackList == null) {
+            sMusicCallbackList = new ArrayList<>();
+        }
+        sMusicCallbackList.add(callback);
     }
 
-    public static void unRegisterMusicCallback() {
-        sMusicCallback = null;
+    public static void unRegisterMusicCallback(AudioCallback callback) {
+        sMusicCallbackList.remove(callback);
     }
 
     public class ServiceBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
+        AudioService getService() {
+            return AudioService.this;
         }
     }
 }

@@ -5,7 +5,7 @@ package playaudio.android.com;
  * Operating player interface
  */
 
-public interface MusicController {
+public interface AudioController {
 
     void playOrPause();
 

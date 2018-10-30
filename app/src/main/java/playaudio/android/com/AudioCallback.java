@@ -7,7 +7,7 @@ import playaudio.android.com.bean.RadioResponse;
  * Player status callback
  */
 
-public interface MusicCallback {
+public interface AudioCallback {
 
     void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean);
 
