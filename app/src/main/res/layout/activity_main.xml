@@ -1,41 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/default_wallpaper_bg"
-    android:orientation="vertical"
     tools:context="playaudio.android.com.MainActivity">
 
-    <playaudio.android.com.AudioView
-        android:id="@+id/musicView1"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="10dp" />
+    <LinearLayout
+        android:id="@+id/mainView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/default_wallpaper_bg"
+        android:orientation="vertical">
 
-    <playaudio.android.com.AudioView
-        android:id="@+id/musicView2"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="10dp" />
+        <Button
+            android:id="@+id/addBt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="添加音乐控件" />
 
-    <playaudio.android.com.AudioView
-        android:id="@+id/musicView3"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="10dp" />
+        <playaudio.android.com.AudioView
+            android:id="@+id/musicView1"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="10dp" />
 
-    <playaudio.android.com.AudioView
-        android:id="@+id/musicView4"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="10dp" />
+        <playaudio.android.com.AudioView
+            android:id="@+id/musicView2"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
 
-    <playaudio.android.com.AudioView
-        android:id="@+id/musicView5"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="10dp" />
-
-</LinearLayout>
+</ScrollView>

@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -32,13 +34,11 @@ public class AudioService extends IntentService implements AudioController {
     private static List<AudioCallback> sMusicCallbackList;
 
     private IBinder mBinder = new ServiceBinder();
+    private Handler mMainHandler;
     private List<RadioResponse.DataBean.ItemsBean> mRadioList;
     private RadioResponse.DataBean.ItemsBean mCurrentMusic;
     private MediaPlayer mMediaPlayer;
-    // 已经初始化资源
-    private boolean mIsInitialized;
-    // 正在加载音频流文件
-    private boolean mIsLoading;
+    private int mStatus;
 
     public static void bindService(Context context, ServiceConnection serviceConnection) {
         Intent intent = new Intent(context, AudioService.class);
@@ -77,6 +77,7 @@ public class AudioService extends IntentService implements AudioController {
         super.onCreate();
         Log.d(TAG, "onCreate");
         mRadioList = new ArrayList<>();
+        mMainHandler = new Handler(Looper.getMainLooper());
         initPlayer();
     }
 
@@ -95,7 +96,32 @@ public class AudioService extends IntentService implements AudioController {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(TAG, "onHandleIntent");
-        getRadioList();
+        if (mRadioList.size() == 0) {
+            getRadioList();
+        } else {
+            mMainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    for (AudioCallback callback : sMusicCallbackList) {
+                        switch (mStatus) {
+                            case AudioCallback.radio_state_idle:
+                                callback.onFinishLoadingMusicList(mCurrentMusic);
+                                break;
+                            case AudioCallback.radio_state_loading:
+                                callback.onLoading(mCurrentMusic);
+                                break;
+                            case AudioCallback.radio_state_playing:
+                                callback.onPlay(mCurrentMusic);
+                                break;
+                            case AudioCallback.radio_state_paused:
+                                callback.onPause(mCurrentMusic);
+                                break;
+                        }
+
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -116,17 +142,19 @@ public class AudioService extends IntentService implements AudioController {
             for (AudioCallback callback : sMusicCallbackList) {
                 callback.onPause(mCurrentMusic);
             }
+            mStatus = AudioCallback.radio_state_paused;
         } else {
-            if (!mIsInitialized) {
+            if (mStatus == AudioCallback.radio_state_idle) {
                 prepareMusic();
             } else {
-                if (mIsLoading) {
+                if (mStatus == AudioCallback.radio_state_loading) {
                     return;
                 }
                 mMediaPlayer.start();
                 for (AudioCallback callback : sMusicCallbackList) {
                     callback.onPlay(mCurrentMusic);
                 }
+                mStatus = AudioCallback.radio_state_playing;
             }
         }
     }
@@ -168,10 +196,10 @@ public class AudioService extends IntentService implements AudioController {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
                 mediaPlayer.start();
-                mIsLoading = false;
                 for (AudioCallback callback : sMusicCallbackList) {
                     callback.onPlay(mCurrentMusic);
                 }
+                mStatus = AudioCallback.radio_state_playing;
             }
         });
         mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -188,11 +216,11 @@ public class AudioService extends IntentService implements AudioController {
             mMediaPlayer.reset();
             mMediaPlayer.setDataSource(mCurrentMusic.getStreams().get(0).getUrl());
             mMediaPlayer.prepareAsync();
-            mIsInitialized = true;
+            mStatus = AudioCallback.radio_state_initialized;
             for (AudioCallback callback : sMusicCallbackList) {
                 callback.onLoading(mCurrentMusic);
             }
-            mIsLoading = true;
+            mStatus = AudioCallback.radio_state_loading;
         } catch (IOException e) {
             e.printStackTrace();
         }

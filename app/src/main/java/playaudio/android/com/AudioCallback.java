@@ -9,7 +9,17 @@ import playaudio.android.com.bean.RadioResponse;
 
 public interface AudioCallback {
 
-    void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean firstMusicBean);
+    int radio_state_idle = 0;
+
+    int radio_state_initialized = 1;
+
+    int radio_state_loading = 2;
+
+    int radio_state_playing = 3;
+
+    int radio_state_paused = 4;
+
+    void onFinishLoadingMusicList(RadioResponse.DataBean.ItemsBean musicBean);
 
     void onLoading(RadioResponse.DataBean.ItemsBean musicBean);
 
