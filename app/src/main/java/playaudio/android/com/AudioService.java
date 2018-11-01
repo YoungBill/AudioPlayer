@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Handler;
@@ -38,7 +39,22 @@ public class AudioService extends IntentService implements AudioController {
     private List<RadioResponse.DataBean.ItemsBean> mRadioList;
     private RadioResponse.DataBean.ItemsBean mCurrentMusic;
     private MediaPlayer mMediaPlayer;
+    /**
+     * 播放器状态
+     * int radio_state_idle = 0;
+     * <p>
+     * int radio_state_initialized = 1;
+     * <p>
+     * int radio_state_loading = 2;
+     * <p>
+     * int radio_state_playing = 3;
+     * <p>
+     * int radio_state_paused = 4;
+     */
     private int mStatus;
+    private AudioManager mAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener;
+    private boolean mShouldResumePlay;
 
     public static void bindService(Context context, ServiceConnection serviceConnection) {
         Intent intent = new Intent(context, AudioService.class);
@@ -132,6 +148,7 @@ public class AudioService extends IntentService implements AudioController {
             mMediaPlayer.stop();
         }
         mMediaPlayer.release();
+        abandonFocus();
     }
 
     @Override
@@ -195,11 +212,13 @@ public class AudioService extends IntentService implements AudioController {
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
-                mediaPlayer.start();
-                for (AudioCallback callback : sMusicCallbackList) {
-                    callback.onPlay(mCurrentMusic);
+                if (requestFocus()) {
+                    mediaPlayer.start();
+                    for (AudioCallback callback : sMusicCallbackList) {
+                        callback.onPlay(mCurrentMusic);
+                    }
+                    mStatus = AudioCallback.radio_state_playing;
                 }
-                mStatus = AudioCallback.radio_state_playing;
             }
         });
         mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -209,6 +228,38 @@ public class AudioService extends IntentService implements AudioController {
                 return false;
             }
         });
+        if (mAudioManager == null) {
+            mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        }
+        if (mAudioFocusChangeListener == null) {
+            mAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    switch (focusChange) {
+                        case AudioManager.AUDIOFOCUS_GAIN:
+                        case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT:
+                        case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
+                            //播放操作
+                            if (mShouldResumePlay) {
+                                mMediaPlayer.start();
+                                mShouldResumePlay = false;
+                            }
+                            break;
+                        case AudioManager.AUDIOFOCUS_LOSS:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                            //暂停操作
+                            if (mMediaPlayer.isPlaying()) {
+                                mMediaPlayer.pause();
+                                mShouldResumePlay = true;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+        }
     }
 
     private void prepareMusic() {
@@ -253,6 +304,23 @@ public class AudioService extends IntentService implements AudioController {
 
             }
         });
+    }
+
+    private boolean requestFocus() {
+        if (mAudioFocusChangeListener != null) {
+            return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == mAudioManager.requestAudioFocus(
+                    mAudioFocusChangeListener,
+                    AudioManager.STREAM_MUSIC,
+                    AudioManager.AUDIOFOCUS_GAIN);
+        }
+        return false;
+    }
+
+    private boolean abandonFocus() {
+        if (mAudioFocusChangeListener != null) {
+            return AudioManager.AUDIOFOCUS_REQUEST_GRANTED == mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+        }
+        return false;
     }
 
     public static void registerMusicCallback(AudioCallback callback) {
